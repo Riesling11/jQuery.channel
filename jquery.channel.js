@@ -130,8 +130,26 @@
 				"originalChannel":sOriginalChannel_
 			};
 		},
+		
+		_subscribe: function( sChannel_,fn_, withContext ) {
+			sChannel_ = _methods._normalize(sChannel_);
+			_methods._setWildcard(sChannel_);
 
-
+			if (!_oSubscriptions[sChannel_])  {
+				_oSubscriptions[sChannel_] = $.Callbacks('unique');
+			}
+			if (withContext) {
+				_oSubscriptions[sChannel_].add(fn_);
+			} else {
+				_oSubscriptions[sChannel_].add(function() {
+					[].shift.apply(arguments);
+					fn_.apply(arguments);
+				});	
+			}
+			
+			return this;
+		},
+		
 		/**
 		 * Subscribes to channel
 		 * @param  {String} sChannel_   Channel, e.g. news/world
@@ -139,15 +157,17 @@
 		 * @return {jQuery-Collection}  this
 		 */
 		subscribe : function( sChannel_,fn_ ) {
-			sChannel_ = _methods._normalize(sChannel_);
-			_methods._setWildcard(sChannel_);
+			return _methods._subscribe(sChannel_, fn_, true);
+		},
 
-			if (!_oSubscriptions[sChannel_])  {
-				_oSubscriptions[sChannel_] = $.Callbacks('unique');
-			}
-
-			_oSubscriptions[sChannel_].add(fn_);
-			return this;
+		/**
+		 * Subscribes to channel, first argument in callback = data
+		 * @param  {String} sChannel_   Channel, e.g. news/world
+		 * @param  {Function} fn_       Callback
+		 * @return {jQuery-Collection}  this
+		 */
+		sub : function( sChannel_,fn_ ) {
+			return _methods._subscribe(sChannel_, fn_, false);
 		},
 
 		/**
